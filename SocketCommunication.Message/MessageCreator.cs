@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 
-namespace SocketCommunication.Common
+namespace SocketCommunication.Message
 {
     public static class MessageCreator
     {
