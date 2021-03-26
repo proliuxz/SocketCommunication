@@ -45,11 +45,9 @@ namespace SocketCommunication.Server
             {
                 Socket clientSocket = _serverSocket.Accept();
                 Console.WriteLine("Client Connected");
-                clientSocket.Send(Encoding.UTF8.GetBytes($"Hello! From {_serverSocket.LocalEndPoint}"));
                 await Task.Delay(100);
                 while (!ct.IsCancellationRequested)
                 {
-                    clientSocket.Send(Encoding.UTF8.GetBytes(DateTime.Now.ToString()));
                     for (int i = 0; i < 500; i++)
                     {
                         clientSocket.Send(MessageCreator.CreateOneMessage(1016).ToByteArray());
