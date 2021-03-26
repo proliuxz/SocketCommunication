@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SocketCommunication.Common;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -20,12 +21,11 @@ namespace SocketCommunication.Server
             _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _serverSocket.Bind(new IPEndPoint(IPAddress.Parse(Ip), Port));
             _serverSocket.Listen(Backlog);
-
             try
             {
                 Console.WriteLine("Server Started");
                 ListenClientConnect(cts.Token).Wait();
-                Console.ReadLine();
+                Console.ReadKey();
             }
             catch (Exception e)
             {
@@ -45,8 +45,17 @@ namespace SocketCommunication.Server
             {
                 Socket clientSocket = _serverSocket.Accept();
                 Console.WriteLine("Client Connected");
-                clientSocket.Send(Encoding.ASCII.GetBytes($"Hello! From {_serverSocket.LocalEndPoint}"));
-                await Task.Delay(1000);
+                clientSocket.Send(Encoding.UTF8.GetBytes($"Hello! From {_serverSocket.LocalEndPoint}"));
+                await Task.Delay(100);
+                while (!ct.IsCancellationRequested)
+                {
+                    clientSocket.Send(Encoding.UTF8.GetBytes(DateTime.Now.ToString()));
+                    for (int i = 0; i < 500; i++)
+                    {
+                        clientSocket.Send(MessageCreator.CreateOneMessage(1016).ToByteArray());
+                    }
+                    await Task.Delay(5000);
+                }
             }
         }
     }
