@@ -58,6 +58,7 @@ namespace SocketCommunication.Client
                     break;
 
                 string str = Encoding.UTF8.GetString(_buffer, _offset + 8, length - 8);
+                Console.WriteLine(str);
                 _offset += length;
             }
 

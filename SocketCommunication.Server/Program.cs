@@ -24,7 +24,7 @@ namespace SocketCommunication.Server
             try
             {
                 Console.WriteLine("Server Started");
-                ListenClientConnect(cts.Token).Wait();
+                Task task = Task.Run(() => ListenClientConnectAsync(cts.Token));
                 Console.ReadKey();
             }
             catch (Exception e)
@@ -39,21 +39,26 @@ namespace SocketCommunication.Server
             }
         }
 
-        private static async Task ListenClientConnect(CancellationToken ct)
+        static async Task ListenClientConnectAsync(CancellationToken ct)
         {
             while (!ct.IsCancellationRequested)
             {
                 Socket clientSocket = _serverSocket.Accept();
                 Console.WriteLine("Client Connected");
                 await Task.Delay(100);
-                while (!ct.IsCancellationRequested)
+                Task task = Task.Run(() => SendMsgAsync(ct, clientSocket));
+            }
+        }
+
+        static async Task SendMsgAsync(CancellationToken ct, Socket clientSocket)
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                for (int i = 0; i < 500; i++)
                 {
-                    for (int i = 0; i < 500; i++)
-                    {
-                        clientSocket.Send(MessageCreator.CreateOneMessage(1016).ToByteArray());
-                    }
-                    await Task.Delay(5000);
+                    clientSocket.Send(MessageCreator.CreateOneMessage(1016).ToByteArray());
                 }
+                await Task.Delay(5000);
             }
         }
     }
