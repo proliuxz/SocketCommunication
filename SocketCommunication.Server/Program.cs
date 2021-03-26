@@ -21,7 +21,7 @@ namespace SocketCommunication.Server
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()
-                .WriteTo.File($"log{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)}.txt")
+                .WriteTo.File("log.txt")
                 .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information)
                 .CreateLogger();
 
