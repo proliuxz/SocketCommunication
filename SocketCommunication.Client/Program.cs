@@ -1,9 +1,12 @@
 ﻿using SocketCommunication.Message;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Serilog;
+using Serilog.Events;
 
 namespace SocketCommunication.Client
 {
@@ -16,6 +19,12 @@ namespace SocketCommunication.Client
         private static Socket _clientSocket;
         static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.File($"log{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)}.txt")
+                .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information)
+                .CreateLogger();
+
             _clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             MessageReader msgReader = new MessageReader();
             try
@@ -28,13 +37,13 @@ namespace SocketCommunication.Client
                     List<string> messages = msgReader.GetMessage(Result, receiveLength);
                     foreach (var message in messages)
                     {
-                        Console.WriteLine(message);
+                        Log.Information(message);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Log.Error(ex.Message);
                 Console.ReadKey();
             }
             finally

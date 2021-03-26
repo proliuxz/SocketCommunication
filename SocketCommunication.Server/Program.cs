@@ -1,9 +1,12 @@
 ﻿using SocketCommunication.Message;
 using System;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
+using Serilog.Events;
 
 namespace SocketCommunication.Server
 {
@@ -16,19 +19,25 @@ namespace SocketCommunication.Server
 
         static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.File($"log{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)}.txt")
+                .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information)
+                .CreateLogger();
+
             CancellationTokenSource cts = new CancellationTokenSource();
             _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _serverSocket.Bind(new IPEndPoint(IPAddress.Parse(Ip), Port));
             _serverSocket.Listen(Backlog);
             try
             {
-                Console.WriteLine("Server Started");
+                Log.Information("Server Started");
                 Task task = Task.Run(() => ListenClientConnectAsync(cts.Token));
                 Console.ReadKey();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e.ToString());
+                Log.Error(ex.Message);
             }
             finally
             {
@@ -43,7 +52,7 @@ namespace SocketCommunication.Server
             while (!ct.IsCancellationRequested)
             {
                 Socket clientSocket = _serverSocket.Accept();
-                Console.WriteLine("Client Connected");
+                Log.Information("Client Connected");
                 await Task.Delay(100);
                 Task task = Task.Run(() => SendMsgAsync(ct, clientSocket));
             }
@@ -53,9 +62,11 @@ namespace SocketCommunication.Server
         {
             while (!ct.IsCancellationRequested)
             {
-                for (int i = 0; i < 500; i++)
+                for (int i = 0; i < 100; i++)
                 {
-                    clientSocket.Send(MessageCreator.CreateOneMessage(1016).ToByteArray());
+                    var msg = MessageCreator.CreateOneMessage(1016);
+                    clientSocket.Send(msg.ToByteArray());
+                    Log.Information(msg.Body);
                 }
                 await Task.Delay(5000);
             }
